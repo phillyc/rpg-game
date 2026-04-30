@@ -210,7 +210,8 @@
                 
                 const person = document.createElement('div');
                 person.className = 'person' + (isRare ? ' rare' : '');
-                person.textContent = '🚹'; // Bathroom sign male icon
+                // Show stop sign for rare person, people emoji for regular
+                person.textContent = isRare ? '🛑' : '🚹';
                 person.dataset.isRare = isRare;
                 person.dataset.position = i;
                 
@@ -246,7 +247,9 @@
         }
 
         function hideModal() {
-            MODAL.classList.remove('active');
+            modalOverlay.classList.remove('active');
+            // Reset rareFound flag so modal can appear again
+            rareFound = false;
         }
 
         CLOSE_MODAL.addEventListener('click', hideModal);
