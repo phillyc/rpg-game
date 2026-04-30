@@ -32,10 +32,29 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
+        header {
+            max-width: 800px;
+            padding: 0 16px;
+            flex-direction: column;
+            gap: 4px;
+            justify-content: flex-start;
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+
         header h1 {
             font-size: 1.25rem;
-            font-weight: 600;
+            font-weight: 700;
             color: #333;
+            margin: 0;
+        }
+
+        header p {
+            font-size: 0.875rem;
+            font-weight: 400;
+            color: #666;
+            margin: 0;
+            line-height: 1.4;
         }
 
         .container {
@@ -146,6 +165,7 @@
 <body>
     <header>
         <h1>You don't have it</h1>
+        <p>1 in 10,000 people is a very rare number. We hope this visualization helps reassure you of that fact.</p>
     </header>
 
     <div class="container" id="container"></div>
