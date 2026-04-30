@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>You Don't Have It <!-- rare person game v2 -->
+    <title>You Don't Have It</title>
     <style>
         * {
             margin: 0;
@@ -13,7 +13,7 @@
 
         body {
             background-color: white;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             min-height: 100vh;
         }
 
@@ -42,9 +42,47 @@
             margin-top: 60px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            padding: 10px;
+            gap: 12px;
+            padding: 16px;
             min-height: calc(100vh - 60px);
+        }
+
+        .row {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .person {
+            width: 56px;
+            height: 56px;
+            background-color: black;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            user-select: none;
+        }
+
+        .person.rare {
+            background-color: #ff4444;
+            cursor: pointer;
+        }
+
+        .person:hover {
+            transform: scale(1.1);
+            transition: transform 0.15s ease;
+        }
+
+        .person.rare:hover {
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1.1); }
+            50% { transform: scale(1.2); }
         }
 
         .modal-overlay {
@@ -53,11 +91,12 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.6);
             display: none;
             align-items: center;
             justify-content: center;
             z-index: 2000;
+            padding: 20px;
         }
 
         .modal-overlay.active {
@@ -66,31 +105,42 @@
 
         .modal {
             background-color: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 32px;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             max-width: 90%;
-            width: 400px;
+            width: 420px;
             text-align: center;
-            position: relative;
         }
 
-        .modal-close {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: none;
-            border: none;
+        .modal h2 {
             font-size: 1.5rem;
-            cursor: pointer;
-            color: #666;
-            padding: 5px 10px;
-            border-radius: 4px;
-            transition: background-color 0.2s;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #333;
         }
 
-        .modal-close:hover {
-            background-color: #f0f0f0;
+        .modal p {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .modal button {
+            background-color: black;
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .modal button:hover {
+            opacity: 0.85;
         }
     </style>
 </head>
@@ -99,80 +149,100 @@
         <h1>You don't have it</h1>
     </header>
 
-    <div class="container" id="container">
-        <!-- Infinite rows will be dynamically added here -->
-    </div>
+    <div class="container" id="container"></div>
 
-    <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-overlay" id="modal">
         <div class="modal">
-            <button class="modal-close" id="modalClose">&times;</button>
-            <h2 id="modalTitle"></h2>
-            <p id="modalMessage"></p>
+            <h2>This is so rare, look how far you had to scroll!</h2>
+            <p>You found the rare red person after scrolling <span id="scroll-count" style="font-weight: 700; color: #333;">0</span> rows.</p>
+            <button id="close-modal">Awesome</button>
         </div>
     </div>
 
     <script>
-        // Modal functionality
-        const modalOverlay = document.getElementById('modalOverlay');
-        const modalClose = document.getElementById('modalClose');
-        const modalTitle = document.getElementById('modalTitle');
-        const modalMessage = document.getElementById('modalMessage');
-        const container = document.getElementById('container');
+        const PEOPLE_PER_ROW = 5;
+        const RARE_CHANCE = 1 / 10000; // 1 in 10,000
+        const CHUNK_SIZE = 100;
+        const SCROLL_THRESHOLD = 300;
 
-        function showModal(title, message) {
-            modalTitle.textContent = title;
-            modalMessage.textContent = message;
-            modalOverlay.classList.add('active');
+        const CONTAINER = document.getElementById('container');
+        const MODAL = document.getElementById('modal');
+        const CLOSE_MODAL = document.getElementById('close-modal');
+        const SCROLL_COUNT_SPAN = document.getElementById('scroll-count');
+
+        let totalRows = 0;
+        let scrollCount = 0;
+        let rareFound = false;
+
+        function createPersonIcon(isRare = false) {
+            const person = document.createElement('div');
+            person.className = 'person' + (isRare ? ' rare' : '');
+            person.textContent = '🚹'; // Bathroom sign male icon
+            person.dataset.isRare = isRare;
+            
+            if (isRare) {
+                person.addEventListener('click', () => {
+                    if (!rareFound) {
+                        rareFound = true;
+                        showRareModal();
+                    }
+                });
+            }
+            
+            return person;
+        }
+
+        function createRow() {
+            const row = document.createElement('div');
+            row.className = 'row';
+            
+            for (let i = 0; i < PEOPLE_PER_ROW; i++) {
+                const isRare = Math.random() < RARE_CHANCE;
+                const person = createPersonIcon(isRare);
+                row.appendChild(person);
+            }
+            
+            return row;
+        }
+
+        function addRows(count) {
+            for (let i = 0; i < count; i++) {
+                const row = createRow();
+                CONTAINER.appendChild(row);
+                totalRows++;
+            }
+        }
+
+        function showRareModal() {
+            if (totalRows > 0) {
+                scrollCount = totalRows;
+            }
+            SCROLL_COUNT_SPAN.textContent = scrollCount.toLocaleString();
+            MODAL.classList.add('active');
         }
 
         function hideModal() {
-            modalOverlay.classList.remove('active');
+            MODAL.classList.remove('active');
         }
 
-        modalClose.addEventListener('click', hideModal);
-        modalOverlay.addEventListener('click', (e) => {
-            if (e.target === modalOverlay) {
+        CLOSE_MODAL.addEventListener('click', hideModal);
+        MODAL.addEventListener('click', (e) => {
+            if (e.target === MODAL) {
                 hideModal();
             }
         });
 
-        // Generate random rows for infinite scroll effect
-        function createRow() {
-            const row = document.createElement('div');
-            row.style.cssText = `
-                background: white;
-                padding: 20px;
-                border-radius: 8px;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-                font-size: 1.25rem;
-                cursor: pointer;
-                transition: transform 0.2s, box-shadow 0.2s;
-            `;
-            row.textContent = Math.floor(Math.random() * 1000);
-            row.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (Math.random() < 0.01) {
-                    // 1% chance to trigger modal
-                    showModal('Rare Person Found!', 'Congratulations! You found someone rare.');
-                }
-            });
-            return row;
-        }
-
-        // Load initial rows
-        for (let i = 0; i < 20; i++) {
-            container.appendChild(createRow());
-        }
-
-        // Infinite scroll loading
-        window.addEventListener('scroll', () => {
-            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500) {
-                // Add more rows when near bottom
-                for (let i = 0; i < 10; i++) {
-                    container.appendChild(createRow());
-                }
+        function checkScroll() {
+            const scrollPosition = window.innerHeight + window.scrollY;
+            if (scrollPosition >= document.body.offsetHeight - SCROLL_THRESHOLD) {
+                addRows(CHUNK_SIZE);
             }
-        });
+        }
+
+        window.addEventListener('scroll', checkScroll);
+
+        // Initial rows
+        addRows(CHUNK_SIZE);
     </script>
 </body>
 </html>
