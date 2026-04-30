@@ -193,31 +193,36 @@
         let scrollCount = 0;
         let rareFound = false;
 
-        function createPersonIcon(isRare = false) {
-            const person = document.createElement('div');
-            person.className = 'person' + (isRare ? ' rare' : '');
-            person.textContent = '🚹'; // Bathroom sign male icon
-            person.dataset.isRare = isRare;
-            
-            if (isRare) {
-                person.addEventListener('click', () => {
-                    if (!rareFound) {
-                        rareFound = true;
-                        showRareModal();
-                    }
-                });
-            }
-            
-            return person;
-        }
+        // Configuration for testing
+        const TESTING_MODE = true; // Set to false for normal deployment
+        const TEST_RARE_ROW = 0;   // Which row (0-indexed) to make rare
+        const TEST_RARE_POS = 4;   // Which position (0-4) to make rare
 
         function createRow() {
             const row = document.createElement('div');
             row.className = 'row';
             
             for (let i = 0; i < PEOPLE_PER_ROW; i++) {
-                const isRare = Math.random() < RARE_CHANCE;
-                const person = createPersonIcon(isRare);
+                // Force rare for testing
+                const isRare = TESTING_MODE && totalRows === TEST_RARE_ROW && i === TEST_RARE_POS
+                    ? true
+                    : Math.random() < RARE_CHANCE;
+                
+                const person = document.createElement('div');
+                person.className = 'person' + (isRare ? ' rare' : '');
+                person.textContent = '🚹'; // Bathroom sign male icon
+                person.dataset.isRare = isRare;
+                person.dataset.position = i;
+                
+                if (isRare) {
+                    person.addEventListener('click', () => {
+                        if (!rareFound) {
+                            rareFound = true;
+                            showRareModal();
+                        }
+                    });
+                }
+                
                 row.appendChild(person);
             }
             
