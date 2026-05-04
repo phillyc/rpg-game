@@ -37,6 +37,92 @@
             margin: 0 auto;
         }
 
+        /* Hamburger Menu */
+        .hamburger-menu {
+            position: absolute;
+            top: 20px;
+            right: 16px;
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            padding: 5px;
+            z-index: 1001;
+        }
+
+        .hamburger-line {
+            width: 24px;
+            height: 3px;
+            background-color: #333;
+            border-radius: 2px;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .hamburger-menu.active .hamburger-line:nth-child(1) {
+            transform: translateY(8px) rotate(45deg);
+        }
+
+        .hamburger-menu.active .hamburger-line:nth-child(2) {
+            opacity: 0;
+            transform: translateX(-10px);
+        }
+
+        .hamburger-menu.active .hamburger-line:nth-child(3) {
+            transform: translateY(-8px) rotate(-45deg);
+        }
+
+        .nav-menu {
+            position: absolute;
+            top: 70px;
+            right: 16px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            padding: 12px;
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 180px;
+            z-index: 1001;
+        }
+
+        .nav-menu.active {
+            display: flex;
+        }
+
+        .nav-menu button {
+            background-color: #f0f0f0;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #333;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            text-align: left;
+        }
+
+        .nav-menu button:hover {
+            background-color: #e0e0e0;
+            transform: translateX(4px);
+        }
+
+        .nav-menu button:active {
+            transform: translateX(2px);
+        }
+
+        @media (max-width: 768px) {
+            .hamburger-menu {
+                display: flex;
+            }
+
+            header h1,
+            header p {
+                display: none;
+            }
+        }
+
         header h1 {
             font-size: 1.25rem;
             font-weight: 700;
@@ -159,6 +245,18 @@
 </head>
 <body>
     <header>
+        <div class="hamburger-menu" id="hamburger">
+            <div class="hamburger-line"></div>
+            <div class="hamburger-line"></div>
+            <div class="hamburger-line"></div>
+        </div>
+        <nav class="nav-menu" id="navMenu">
+            <button id="nav-home">🏠 Home</button>
+            <button id="nav-about">ℹ️ About</button>
+            <button id="nav-test1">🧪 Test 1</button>
+            <button id="nav-test2">🧪 Test 2</button>
+            <button id="nav-test3">🧪 Test 3</button>
+        </nav>
         <h1>You don't have it</h1>
         <p>1 in 10,000 people is a very rare number. We hope this visualization helps reassure you of that fact.</p>
     </header>
@@ -183,10 +281,38 @@
         const MODAL = document.getElementById('modal');
         const CLOSE_MODAL = document.getElementById('close-modal');
         const SCROLL_COUNT_SPAN = document.getElementById('scroll-count');
+        const HAMBURGER = document.getElementById('hamburger');
+        const NAV_MENU = document.getElementById('navMenu');
+        const NAV_HOME = document.getElementById('nav-home');
+        const NAV_ABOUT = document.getElementById('nav-about');
+        const NAV_TEST1 = document.getElementById('nav-test1');
+        const NAV_TEST2 = document.getElementById('nav-test2');
+        const NAV_TEST3 = document.getElementById('nav-test3');
 
         let totalRows = 0;
         let scrollCount = 0;
         let rareFound = false;
+
+        // Hamburger menu toggle
+        HAMBURGER.addEventListener('click', () => {
+            HAMBURGER.classList.toggle('active');
+            NAV_MENU.classList.toggle('active');
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!HAMBURGER.contains(e.target) && !NAV_MENU.contains(e.target)) {
+                HAMBURGER.classList.remove('active');
+                NAV_MENU.classList.remove('active');
+            }
+        });
+
+        // Navigation test buttons
+        NAV_HOME.addEventListener('click', () => alert('🏠 Home clicked!'));
+        NAV_ABOUT.addEventListener('click', () => alert('ℹ️ About clicked!'));
+        NAV_TEST1.addEventListener('click', () => alert('🧪 Test 1 clicked!'));
+        NAV_TEST2.addEventListener('click', () => alert('🧪 Test 2 clicked!'));
+        NAV_TEST3.addEventListener('click', () => alert('🧪 Test 3 clicked!'));
 
         // Configuration for testing
         const TESTING_MODE = true; // Set to false for normal deployment
