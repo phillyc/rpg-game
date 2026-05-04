@@ -1,0 +1,60 @@
+name: Deploy Branch Preview
+
+on:
+  push:
+    branches:
+      - 'test/*'
+      - 'feature/*'
+      - 'dev/*'
+
+concurrency:
+  group: "preview-${{ github.ref_name }}"
+  cancel-in-progress: true
+
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Extract branch name
+        id: branch
+        run: |
+          BRANCH="${{ github.ref_name }}"
+          BRANCH_SLUG=$(echo "$BRANCH" | tr '/' '-')
+          echo "slug=$BRANCH_SLUG" >> $GITHUB_OUTPUT
+          echo "::notice::Deploying preview for: $BRANCH_SLUG"
+      
+      - name: Create deployment directory
+        run: |
+          mkdir -p ${{ steps.branch.outputs.slug }}
+          cp index.html ${{ steps.branch.outputs.slug }}/
+      
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+      
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ steps.branch.outputs.slug }}
+      
+      - name: Deploy via Pages API
+        env:
+          GH_TOKEN: ${{ secrets.PAGES_API_TOKEN }}
+        run: |
+          # Call GitHub Pages API to deploy to custom path
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            "https://api.github.com/repos/phillyc/rpg-game/pages/builds" \
+            -d '{
+              "branch": "main",
+              "path": "/${{ steps.branch.outputs.slug }}/",
+              "files": ["${{ steps.branch.outputs.slug }}/index.html"]
+            }'
